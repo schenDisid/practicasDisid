@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:accounts-api="http://www.mulesoft.org/schema/mule/accounts-api"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/accounts-api http://www.mulesoft.org/schema/mule/accounts-api/current/mule-accounts-api.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<sub-flow name="log-at-exit" doc:id="a3e3806c-77d3-42b8-a324-a0c264480cd3" >
+		<logger level="INFO" doc:name="Last Mule Message" doc:id="f563ac7f-f5ae-404f-9046-bded35359da7" />
+	</sub-flow>
+	<sub-flow name="log-set-user-id" doc:id="361daaed-246d-4201-a445-e3ef9ac98b83" >
+		<logger level="INFO" doc:name="First Mule Message" doc:id="736a8603-0a3e-413d-b57e-92c63198f784" />
+		<set-variable value="#[message.attributes.headers.csr_user_id]" doc:name="userId" doc:id="5839cc95-a471-4aca-8ff3-3ae5c192a68b" variableName="userId" />
+	</sub-flow>
+	<sub-flow name="set-variables-do-validation" doc:id="7d65a1cc-0a14-4c16-8932-72785d681ed4">
+		<set-variable value="#[attributes.queryParams.cname]" doc:name="accountName" doc:id="00185fa3-84b0-427f-95be-4851925ed2b0" variableName="accountName" />
+		<set-variable value='#[attributes.queryParams.ctype default "business"]' doc:name="accountType" doc:id="4546a542-018c-4693-88ca-cfebc7cc885d" variableName="accountType" />
+		<validation:matches-regex doc:id="ef88c451-42ba-45bf-ab83-049ae6adda02" doc:name="accountType one of business or personal" value="#[vars.accountType]" regex="${validation.type.regex}" message="${validation.type.message}">
+			<error-mapping sourceType="VALIDATION:MISMATCH" targetType="APP:ACCOUNT_TYPE" />
+		</validation:matches-regex>
+		<set-variable value='#[attributes.queryParams.condition default "AND"]' doc:name="condition" doc:id="ff6ed4b8-d834-43fa-a7ba-2d2dff29df7f" variableName="condition" />
+		<validation:matches-regex doc:id="a50e95a4-4e80-401c-a0ee-1e83a36eab6f" doc:name="condition one of AND or OR" value="#[vars.condition]" regex="${validation.condition.regex}" message="${validation.condition.message}">
+			<error-mapping sourceType="VALIDATION:MISMATCH" targetType="APP:CONDITION" />
+		</validation:matches-regex>
+	</sub-flow>
+	<sub-flow name="or-condition" doc:id="12a24100-079a-4b32-8410-14c6c2542f39">
+		<scatter-gather doc:name="Scatter-Gather" doc:id="6de389ae-710a-4941-b89f-a775eb6b12b4">
+			<route>
+				<accounts-api:get-accounts doc:name="Get accounts by name" doc:id="d7b5a72d-a7a2-4799-81a2-4bb9e631e3d7" config-ref="Accounts_API_Config" user-id="#[vars.userId]" client-id="${accounts.client_id}" client-secret="${accounts.client_secret}" account-name="#[vars.accountName]" />
+			</route>
+			<route>
+				<accounts-api:get-accounts doc:name="Get accounts by type" doc:id="7c5bcaaa-fd12-4fcd-bad8-8ef4ce789ce6" config-ref="Accounts_API_Config" user-id="#[vars.userId]" client-id="${accounts.client_id}" client-secret="${accounts.client_secret}" account-type="#[vars.accountType]" />
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Get Accounts Remove Duplicate Records" doc:id="96cff2dc-a24f-44b6-8706-0a01e2ebab39">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+flatten(payload..*payload) distinctBy $.id]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	<flow name="get-accounts" doc:id="93a0cf08-e882-465c-a067-d2ba2a2ddd3e" >
+		<http:listener doc:name="GET /accounts" doc:id="c93d60c1-f539-4c9d-8952-082067610093" config-ref="HTTP_Listener_config" path="/accounts" allowedMethods="GET">
+			<http:response >
+				<http:headers ><![CDATA[#[{
+	number_of_accounts: vars.numOfRecords,
+	account_name: vars.accountName,
+	account_type: vars.accountType,
+	csr_user_id: vars.userId
+}]]]></http:headers>
+			</http:response>
+			<http:error-response statusCode="#[vars.httpStatus default 500]" >
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<flow-ref doc:name="log-set-user-id" doc:id="1340bcd8-75bf-4634-80d8-af0b60881d82" name="log-set-user-id" />
+		<flow-ref doc:name="set-variables-do-validation" doc:id="f87b53a9-8815-4804-af69-e2c0a2399ec6" name="set-variables-do-validation" />
+		<choice doc:name="Choice" doc:id="561b79a8-30db-4a0e-9612-78b37089b01d" >
+			<when expression='#[vars.condition == "AND" or isEmpty(vars.accountName)]'>
+				<accounts-api:get-accounts doc:name="Get accounts by name and by type" doc:id="340b8fb0-7baa-4051-9896-812990c37831" config-ref="Accounts_API_Config" user-id="#[vars.userId]" client-id="${accounts.client_id}" client-secret="${accounts.client_secret}" account-name="#[vars.accountName]" account-type="#[vars.accountType]" />
+			</when>
+			<otherwise >
+				<flow-ref doc:name="or-condition" doc:id="c0b5046a-97d7-48ef-848c-37e13e4b106d" name="or-condition"/>
+			</otherwise>
+		</choice>
+		<set-variable value="#[sizeOf(payload)]" doc:name="numOfRecords" doc:id="c02f9488-2676-4322-9618-648ba903a623" variableName="numOfRecords"/>
+		<ee:transform doc:name="json2xml" doc:id="83194da1-6d8b-4d8d-b7c8-93fcfaab563d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+/*
+ * There are faster ways to calculate the total air miles
+ * but this is a tad more advanced.  Attend the DW 2.0 class
+ * to know more.
+ */
+fun sumAirMilesForName(nm) = do {
+	var accountsForName = payload filter ($.name == nm)
+	---
+	sum(accountsForName.*air_miles)
+}
+---
+// Set the root tag
+// Sort the records based upon the air miles value
+// The result is iterated once more using the map function
+// to organize each record using their own tag
+// Finally, use the Dynamic Elements feature {()} to
+// destroy the array and collapse the containing objects 
+// into a single object.
+accounts: {(payload orderBy $.air_miles
+map {
+	account @(
+		id: $.id, 
+		total_air_miles: sumAirMilesForName($.name)
+	): $
+})}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="log-at-exit" doc:id="bd13f1f4-14f8-4c88-bc54-17d1f3406fca" name="log-at-exit" />
+		<error-handler ref="api-main-error-handler" />
+	</flow>
+	<flow name="post-accounts" doc:id="41d42109-e572-47c6-88cd-35eb786503c1" >
+		<http:listener doc:name="POST /accounts" doc:id="95baa9bb-870e-4107-8333-f76437575748" config-ref="HTTP_Listener_config" path="/accounts" allowedMethods="POST">
+			<http:response >
+				<http:headers ><![CDATA[#[{
+	number_of_accounts: vars.accountsNumber,
+	csr_user_id: vars.userId
+}]]]></http:headers>
+			</http:response>
+		</http:listener>
+		<flow-ref doc:name="log-set-user-id" doc:id="a9b50248-5c13-4fad-b3df-f7398efe6c4b" name="log-set-user-id" />
+		<set-variable value="#[sizeOf(payload)]" doc:name="accountsNumber" doc:id="4fb26af1-42ec-4133-907c-ec3b293074c0" variableName="accountsNumber"/>
+		<vm:publish doc:id="77459481-c033-4076-8033-ad41a437af6e" doc:name="csr_input_queue" config-ref="CSR_VM_Config" queueName="${vm.queue}">
+			<vm:content ><![CDATA[#[output application/json
+---
+{
+	user_id: vars.userId,
+	accounts: payload
+}]]]></vm:content>
+		</vm:publish>
+		<ee:transform doc:name="Transform Message" doc:id="f4ca3657-6ba0-4dd3-bd70-76630627b5a6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "Accounts submitted"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="log-at-exit" doc:id="dcf2880e-5e0f-4808-b6f4-5ab528ce55eb" name="log-at-exit" />
+	</flow>
+	<flow name="read-csr-input-queue" doc:id="0f5819d7-4128-4ba0-a2b8-b8113ef21e1f" >
+		<vm:listener queueName="${vm.queue}" doc:name="csr-input-queue" doc:id="deb4e272-f805-48b7-a0d0-a0a7682ef897" config-ref="CSR_VM_Config"/>
+		<logger level="INFO" doc:name="First Mule Message" doc:id="dbff0d93-4602-4b04-aa3e-4856c21ad0bd" />
+		<accounts-api:create-account doc:name="Create account" doc:id="4d6fb774-a4d3-450d-b703-b5082c72d268" config-ref="Accounts_API_Config" user-id="#[payload.user_id]" client-id="${accounts.client_id}" client-secret="${accounts.client_secret}">
+			<accounts-api:create-account-request-data ><![CDATA[#[payload.accounts]]]></accounts-api:create-account-request-data>
+		</accounts-api:create-account>
+		<flow-ref doc:name="log-at-exit" doc:id="2420ee92-503c-49cf-ab4b-75c37f21b985" name="log-at-exit" />
+	</flow>
+</mule>

@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="http_req_attrs_pojo" format="java">
+      <types:shape format="java" element="org.mule.extension.http.api.HttpRequestAttributes"/>
+    </types:type>
+    <types:type name="accounts_json" format="json">
+      <types:shape format="weave" example="examples/accounts.json"><![CDATA[%dw 2.0
+
+type accounts_json = Array<{|  id: Number {"typeId": "int"},   name: String,   "type": String,   address: String,   air_miles: Number {"typeId": "int"},   created_at: String|}> {"example": "[{\\\"id\\\":4429,\\\"name\\\":\\\"Wendy Crafts\\\",\\\"type\\\":\\\"business\\\",\\\"address\\\":\\\"982 Cherry Ave,Chennai,TN,25362,india\\\",\\\"air_miles\\\":10000,\\\"created_at\\\":\\\"2010-01-06T00:42:34\\\"},{\\\"id\\\":4430,\\\"name\\\":\\\"Robert Barath\\\",\\\"type\\\":\\\"business\\\",\\\"address\\\":\\\"12354 Foo Street,Boulder,Colorado,15361,Murrica\\\",\\\"air_miles\\\":55240,\\\"created_at\\\":\\\"2006-07-20T21:39:45\\\"},{\\\"id\\\":4444,\\\"name\\\":\\\"Wendy Crafts\\\",\\\"type\\\":\\\"personal\\\",\\\"address\\\":\\\"982 Cherry Ave,Chennai,TN,25362,india\\\",\\\"air_miles\\\":90000,\\\"created_at\\\":\\\"2010-01-06T00:42:34\\\"}]"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#7d65a1cc-0a14-4c16-8932-72785d681ed4">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:attributes type="http_req_attrs_pojo"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#361daaed-246d-4201-a445-e3ef9ac98b83">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:attributes type="http_req_attrs_pojo"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#561b79a8-30db-4a0e-9612-78b37089b01d">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="accounts_json"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#83194da1-6d8b-4d8d-b7c8-93fcfaab563d"/>
+</types:mule>

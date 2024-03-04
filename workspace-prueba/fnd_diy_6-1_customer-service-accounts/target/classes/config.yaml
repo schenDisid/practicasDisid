@@ -1,0 +1,31 @@
+# HTTP Listener
+http:
+  port: "8081"
+  
+# Accounts
+accounts:
+  host: "diy-accounts-api.us-w2.cloudhub.io"
+  port: "80"
+  basepath: "/"
+  protocol: "HTTP"
+  client_id: "6d9e329147164bf08a2cc4eeb075252e"
+  client_secret: "B20a21B05dBb4287a7C49076D6E0d377"
+
+# CSR Queues
+vm.queue: "csr_input_queue"
+
+# Transactions
+transactions:
+  wsdl: "http://apdev-accounts-ws.cloudhub.io/api/transactions?wsdl"
+  service: "TransactionServiceService"
+  port: "TransactionServicePort"
+  address: "http://apdev-accounts-ws.cloudhub.io/api/transactions"
+  
+# Validation
+validation:
+  type:
+    regex: "^(business|personal)$"
+    message: "Invalid account_type"
+  condition:
+    regex: "^(AND|OR)$"
+    message: "Invalid condition"

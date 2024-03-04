@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc"
+	xmlns:accounts-api="http://www.mulesoft.org/schema/mule/accounts-api"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/accounts-api http://www.mulesoft.org/schema/mule/accounts-api/current/mule-accounts-api.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd">
+
+	<http:listener-config name="HTTP_Listener_config"
+		doc:name="HTTP Listener config"
+		doc:id="a4546f3a-bea3-40d8-8c73-9d427ca4cd44">
+		<http:listener-connection host="0.0.0.0"
+			port="${http.port}" />
+	</http:listener-config>
+	<http:request-config
+		name="Accounts_HTTP_Request_configuration"
+		doc:name="HTTP Request configuration"
+		doc:id="e15e9b67-aa47-4150-a656-1f92105922e4"
+		basePath="${accounts.basepath}">
+		<http:request-connection
+			host="${accounts.host}" 
+			port="${accounts.port}"
+			protocol="${accounts.protocol}" />
+	</http:request-config>
+	<vm:config name="CSR_VM_Config" doc:name="VM Config"
+		doc:id="39b6771d-5076-4b8e-9d19-9911bd806dcf">
+		<vm:queues>
+			<vm:queue queueName="${vm.queue}" />
+		</vm:queues>
+	</vm:config>
+	<configuration-properties file="config.yaml" />
+	<accounts-api:config name="Accounts_API_Config" doc:name="Accounts API Config" doc:id="473d5ffd-743a-4645-a69f-5a331ee87c62" property_host="${accounts.host}" property_port="${accounts.port}" property_protocol="${accounts.protocol}" property_basePath="${accounts.basepath}" />
+	<wsc:config name="Transactions_Web_Service_Consumer_Config" doc:name="Web Service Consumer Config" doc:id="58c433f6-4524-4064-9f6e-8a0a17d4dda2" >
+		<wsc:connection wsdlLocation="${transactions.wsdl}" service="${transactions.service}" port="${transactions.port}" address="${transactions.address}" >
+			<wsc:web-service-security actor="http://schemas.xmlsoap.org/soap/actor/next" />
+		</wsc:connection>
+	</wsc:config>
+
+
+</mule>

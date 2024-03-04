@@ -1,0 +1,33 @@
+{
+  "configs": [
+    "error.xml",
+    "global.xml",
+    "csr-accounts.xml",
+    "csr-transactions.xml"
+  ],
+  "secureProperties": [],
+  "redeploymentEnabled": true,
+  "name": "com.mycompany:fnd_diy_6-1_customer-service-accounts:1.0.0-SNAPSHOT",
+  "minMuleVersion": "4.3.0",
+  "requiredProduct": "MULE_EE",
+  "classLoaderModelLoaderDescriptor": {
+    "id": "mule",
+    "attributes": {
+      "exportedPackages": [],
+      "exportedResources": [
+        "application-types.xml",
+        "config.yaml",
+        "csr-accounts.xml",
+        "csr-transactions.xml",
+        "error.xml",
+        "examples/accounts.json",
+        "global.xml",
+        "log4j2.xml"
+      ]
+    }
+  },
+  "bundleDescriptorLoader": {
+    "id": "mule",
+    "attributes": {}
+  }
+}
