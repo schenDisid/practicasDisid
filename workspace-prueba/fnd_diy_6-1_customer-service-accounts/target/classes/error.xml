@@ -5,20 +5,6 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
 	<error-handler name="api-main-error-handler" doc:id="90c9c809-2b45-4da3-a036-ae717d84ea76" >
-		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="2243fd21-d819-4dd0-aa32-90f19f47b914" type="APP:ACCOUNT_TYPE">
-			<ee:transform doc:name="Transform Message" doc:id="d02f69ac-7c73-4a23-9e22-b0f92b8d733c" >
-				<ee:message >
-					<ee:set-payload ><![CDATA[%dw 2.0
-output application/json
----
-{
-	message: error.description,
-	account_type: vars.accountType
-}]]></ee:set-payload>
-				</ee:message>
-			</ee:transform>
-			<set-variable value="400" doc:name="httpStatus" doc:id="d7556460-37cb-433d-b225-747dc703d657" variableName="httpStatus"/>
-		</on-error-propagate>
 		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="66680f21-58d4-49af-8ef8-e04adbc101cd" type="APP:CONDITION">
 			<ee:transform doc:name="Transform Message" doc:id="51efddd2-0bf3-4b38-99fd-5066f7663fec" >
 				<ee:message >

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <libraryInfos>
     <libraryInfo home="D:\AnypointStudio\plugins\org.mule.tooling.jdk.win32.x86_64_1.2.3" version="11.0.20.1"/>
+    <libraryInfo home="C:\Users\user\Desktop\AnypointStudio\plugins\org.mule.tooling.jdk.win32.x86_64_1.2.3" version="11.0.20.1"/>
     <libraryInfo home="D:\AnypointStudio\plugins\org.mule.tooling.jdk.v8.win32.x86_64_1.2.3" version="1.8.0_382">
         <bootpath>
             <entry path="D:\AnypointStudio\plugins\org.mule.tooling.jdk.v8.win32.x86_64_1.2.3\jre\lib\resources.jar"/>
